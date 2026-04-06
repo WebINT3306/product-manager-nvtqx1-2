@@ -1,166 +1,168 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quản lý Sản phẩm</title>
-  <style>
-    body { font-family: sans-serif; padding: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background-color: #f4f4f4; cursor: pointer; user-select: none; }
+    <meta charset="UTF-8">
+    <title>Quản lý sản phẩm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
 
-    /* Giao diện bảng: Màu nền xen kẽ, highlight hover */
-    tbody tr:nth-child(even) { background-color: #f9f9f9; }
-    tbody tr:hover { background-color: #f1f1f1; }
+        h2 {
+            text-align: center;
+        }
 
-    .form-group { margin-bottom: 10px; }
-    label { display: inline-block; width: 100px; }
-    input { padding: 5px; width: 200px; }
-    button { padding: 8px 15px; margin-top: 10px; cursor: pointer; }
-  </style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+
+        tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        tr:hover {
+            background: #e6f2ff;
+        }
+
+        .form {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+        }
+
+        input {
+            padding: 8px;
+            margin: 5px;
+        }
+
+        button {
+            padding: 8px 15px;
+            cursor: pointer;
+            background: #28a745;
+            color: white;
+            border: none;
+        }
+    </style>
 </head>
+
 <body>
 
-  <h2>Thêm Sản Phẩm</h2>
-  <div class="form-group">
-    <label for="input-name">Tên:</label>
-    <input type="text" id="input-name">
-  </div>
-  <div class="form-group">
-    <label for="input-category">Danh mục:</label>
-    <input type="text" id="input-category">
-  </div>
-  <div class="form-group">
-    <label for="input-price">Đơn giá:</label>
-    <input type="number" id="input-price" step="any">
-  </div>
-  <div class="form-group">
-    <label for="input-quantity">Số lượng:</label>
-    <input type="number" id="input-quantity">
-  </div>
-  <button id="btn-add">Thêm</button>
+<h2>Quản lý sản phẩm</h2>
 
-  <h2>Danh Sách Sản Phẩm</h2>
-  <table id="product-table">
+<table id="product-table">
     <thead>
-      <tr>
+    <tr>
         <th>STT</th>
-        <th id="sort-by-name">Tên sản phẩm <span id="sort-icon"></span></th>
+        <th id="sort-name">Tên sản phẩm ▲▼</th>
         <th>Danh mục</th>
         <th>Đơn giá</th>
         <th>Số lượng</th>
-      </tr>
+    </tr>
     </thead>
-    <tbody id="product-tbody">
-      <!-- Dữ liệu được tải bằng AJAX -->
-    </tbody>
-  </table>
+    <tbody></tbody>
+</table>
 
-  <script>
-    let products = [];
-    let tang_dan = null;
+<div class="form">
+    <h3>Thêm sản phẩm</h3>
+    <input id="input-name" placeholder="Tên sản phẩm">
+    <input id="input-category" placeholder="Danh mục">
+    <input id="input-price" type="number" placeholder="Đơn giá">
+    <input id="input-quantity" type="number" placeholder="Số lượng">
+    <button id="btn-add">Thêm</button>
+</div>
 
-    function loadProducts() {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', 'products.json', true);
-      xhr.onreadystatechange = function() {
+<script>
+    let productList = [];
+    let sortAsc = true;
+    const tbody = document.querySelector("#product-table tbody");
+
+    const xhr = new XMLHttpRequest();
+    xhr.onreadystatechange = function () {
         if (xhr.readyState === 4 && xhr.status === 200) {
-          products = JSON.parse(xhr.responseText);
-          renderTable();
+            productList = JSON.parse(xhr.responseText);
+            renderTable(productList);
         }
-      };
-      xhr.send();
-    }
+    };
+    xhr.open('GET', 'products.json');
+    xhr.send();
 
-    function renderTable() {
-      const tbody = document.getElementById("product-tbody");
-      tbody.innerHTML = '';
-      products.forEach((p, index) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${index + 1}</td>
-          <td>${p.name}</td>
-          <td>${p.category || ''}</td>
-          <td>${p.price}</td>
-          <td>${p.quantity}</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    document.getElementById("sort-by-name").addEventListener('click', function() {
-      if (tang_dan === null) {
-        tang_dan = true;
-      } else {
-        tang_dan = !tang_dan;
-      }
-
-      document.getElementById('sort-icon').textContent = tang_dan ? "▲" : "▼";
-
-      products.sort((a, b) => {
-        const nameA = a.name.toLowerCase();
-        const nameB = b.name.toLowerCase();
-        if (nameA < nameB) return tang_dan ? -1 : 1;
-        if (nameA > nameB) return tang_dan ? 1 : -1;
-        return 0;
-      });
-
-      renderTable();
-    });
-
-    document.getElementById("btn-add").addEventListener('click', function() {
-      const nameInput = document.getElementById('input-name');
-      const categoryInput = document.getElementById('input-category');
-      const priceInput = document.getElementById('input-price');
-      const quantityInput = document.getElementById('input-quantity');
-
-      const name = nameInput.value.trim();
-      const category = categoryInput.value.trim();
-      const price = parseFloat(priceInput.value);
-      const quantity = parseFloat(quantityInput.value);
-
-      if (name.length < 3) {
-        alert('Tên sản phẩm không được rỗng và phải có ít nhất 3 ký tự.');
-        return;
-      }
-      if (isNaN(price) || price <= 0) {
-        alert('Đơn giá phải là số dương.');
-        return;
-      }
-      if (isNaN(quantity) || quantity < 1 || !Number.isInteger(quantity)) {
-        alert('Số lượng phải là số nguyên ≥ 1.');
-        return;
-      }
-
-      products.push({
-        id: products.length + 1,
-        name: name,
-        category: category,
-        price: price,
-        quantity: quantity
-      });
-
-      if (tang_dan !== null) {
-        products.sort((a, b) => {
-          const nameA = a.name.toLowerCase();
-          const nameB = b.name.toLowerCase();
-          if (nameA < nameB) return tang_dan ? -1 : 1;
-          if (nameA > nameB) return tang_dan ? 1 : -1;
-          return 0;
+    function renderTable(data) {
+        tbody.innerHTML = "";
+        data.forEach((p, index) => {
+            const row = `
+                <tr>
+                    <td>${index + 1}</td>
+                    <td>${p.name}</td>
+                    <td>${p.category || ""}</td>
+                    <td>${p.price}</td>
+                    <td>${p.quantity}</td>
+                </tr>`;
+            tbody.innerHTML += row;
         });
-      }
+    }
 
-      renderTable();
+    document.getElementById("sort-name").addEventListener("click", () => {
+        productList.sort((a, b) => {
+            if (sortAsc) {
+                return a.name.localeCompare(b.name);
+            } else {
+                return b.name.localeCompare(a.name);
+            }
+        });
 
-      nameInput.value = '';
-      categoryInput.value = '';
-      priceInput.value = '';
-      quantityInput.value = '';
+        document.getElementById("sort-name").textContent = "Tên sản phẩm " + (sortAsc ? "▲" : "▼");
+
+        sortAsc = !sortAsc;
+        renderTable(productList);
     });
 
-    window.addEventListener('DOMContentLoaded', loadProducts);
+    document.getElementById("btn-add").addEventListener("click", () => {
+        const name = document.getElementById("input-name").value.trim();
+        const category = document.getElementById("input-category").value.trim();
+        const price = parseFloat(document.getElementById("input-price").value);
+        const quantity = parseInt(document.getElementById("input-quantity").value);
 
-  </script>
+        if (name.length < 3 || isNaN(price) || price <= 0 || isNaN(quantity) || quantity < 1) {
+            alert("Vui lòng nhập đúng định dạng dữ liệu!");
+            return;
+        }
+
+        const newProduct = {
+            id: Date.now(),
+            name: name,
+            category: category,
+            price: price,
+            quantity: quantity
+        };
+
+        productList.push(newProduct);
+        renderTable(productList);
+
+        document.getElementById("input-name").value = "";
+        document.getElementById("input-category").value = "";
+        document.getElementById("input-price").value = "";
+        document.getElementById("input-quantity").value = "";
+    });
+</script>
 </body>
+
 </html>
